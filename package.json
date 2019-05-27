@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "bignumber": "^1.1.0",
+    "ethers": "^4.0.28",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1"
+    "react-scripts": "3.0.1",
+    "web3": "^1.0.0-beta.55",
+    "web3-react": "^5.0.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -14,7 +18,10 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "globals": {
+      "web3": "readonly"
+    }
   },
   "husky": {
     "hooks": {
