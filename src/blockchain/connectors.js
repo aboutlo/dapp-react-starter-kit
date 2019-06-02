@@ -1,5 +1,5 @@
 import { Connectors } from 'web3-react'
-const { InjectedConnector, NetworkOnlyConnector } = Connectors
+const { InjectedConnector /*, NetworkOnlyConnector*/ } = Connectors
 
 const GANACHE = 1558908147528
 const MAINET = 1
@@ -8,8 +8,9 @@ const MetaMask = new InjectedConnector({
   supportedNetworks: [MAINET, RINKEBY, GANACHE],
 })
 
+/* TODO LS add once we deploy the project
 const Infura = new NetworkOnlyConnector({
   providerURL: 'https://mainnet.infura.io/v3/...',
-})
+})*/
 
 export const connectors = { MetaMask /*, Infura*/ }

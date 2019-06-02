@@ -1,124 +1,65 @@
 import React, { useState } from 'react'
 import { useWeb3Context } from 'web3-react'
-import { ethers } from 'ethers'
-import BigNumber from 'bignumber'
-import { connectors } from '../blockchain/connectors'
-import { Web3Info } from './Web3Info'
+import BigNumber from 'bignumber.js'
+import { Connector } from './Connector'
 import ExampleContract from '../abi/Example.abi'
+import { useContract } from '../hooks/useContract'
 
-const CONTRACT_ADDRESS = '0xCfEB869F69431e42cdB54A4F4f105C19C080A601'
+// WARNING this has to be update after truffle deploy
+const CONTRACT_ADDRESS = '0x3F2aF34E4250de94242Ac2B8A38550fd4503696d'
+console.log('CONTRACT_ADDRESS:', process.env.REACT_APP_CONTRACT_ADDRESS)
 
 function Main() {
   const [value, setValue] = useState(0)
+  const contract = useContract(
+    CONTRACT_ADDRESS,
+    ExampleContract.abi,
+    ExampleContract.bytecode
+  )
   const context = useWeb3Context()
+  const { active } = context
 
-  const onSubmit = async e => {
+  const onSetValue = async e => {
     e.preventDefault()
-    const exampleContract = new ethers.ContractFactory(
-      ExampleContract.abi,
-      ExampleContract.bytecode,
-      context.library.getSigner()
-    ).attach(CONTRACT_ADDRESS)
-    const tx = await exampleContract.setValue(value)
+    console.log('onSetValue:', { value })
+    const tx = await contract.setValue(value)
     console.log(tx.hash)
     await tx.wait()
   }
 
-  const getValue = async e => {
+  const onGetValue = async e => {
     e.preventDefault()
-
-    const exampleContract = new ethers.ContractFactory(
-      ExampleContract.abi,
-      ExampleContract.bytecode,
-      context.library.getSigner()
-    ).attach(CONTRACT_ADDRESS)
-    console.log({ exampleContract })
-    const returnedValue = await exampleContract.value()
-    console.log({ value, returnedValue })
+    const returnedValue = await contract.value()
     setValue(BigNumber(returnedValue).toNumber())
+    console.log({ returnedValue, vOf: returnedValue.toNumber() })
+  }
+
+  const onChange = e => {
+    const inputValue = parseInt(e.target.value)
+    !isNaN(inputValue)
+      ? setValue(parseInt(e.target.value))
+      : setValue(e.target.value)
   }
   return (
     <>
       <Connector />
-      <form onSubmit={onSubmit}>
+      <form>
         <h1>Example Smart Contract (ethers)</h1>
         <input
           type="number"
           name="value"
-          onChange={e => setValue(parseInt(e.target.value))}
+          disabled={!active}
+          onChange={onChange}
           value={value}
         />
-        <button type="button" onClick={getValue}>
+        <button type="button" disabled={!active} onClick={onGetValue}>
           getValue
         </button>
-        <button type="submit">setValue</button>
+        <button type="button" disabled={!active} onClick={onSetValue}>
+          setValue
+        </button>
       </form>
-      <h2>Configurations</h2>
-      <p>URL:</p>
     </>
-  )
-}
-
-function Connector() {
-  const context = useWeb3Context()
-
-  console.log(context)
-
-  if (context.error) {
-    console.error('Error!')
-  }
-
-  const [transactionHash, setTransactionHash] = useState()
-
-  function sendTransaction() {
-    const signer = context.library.getSigner()
-
-    signer
-      .sendTransaction({
-        to: ethers.constants.AddressZero,
-        value: ethers.utils.bigNumberify('0'),
-      })
-      .then(({ hash }) => {
-        setTransactionHash(hash)
-      })
-  }
-
-  return (
-    <React.Fragment>
-      <h1>web3-react Demo</h1>
-      <h3>(latest)</h3>
-
-      <Web3Info />
-
-      {context.error && (
-        <p>An error occurred, check the console for details.</p>
-      )}
-
-      {Object.keys(connectors).map(connectorName => (
-        <button
-          key={connectorName}
-          disabled={context.connectorName === connectorName}
-          onClick={() => context.setConnector(connectorName)}
-        >
-          Activate {connectorName}
-        </button>
-      ))}
-
-      <br />
-      <br />
-
-      {(context.active || (context.error && context.connectorName)) && (
-        <button onClick={() => context.unsetConnector()}>
-          {context.active ? 'Deactivate Connector' : 'Reset'}
-        </button>
-      )}
-
-      {context.active && context.account && !transactionHash && (
-        <button onClick={sendTransaction}>Send Dummy Transaction</button>
-      )}
-
-      {transactionHash && <p>{transactionHash}</p>}
-    </React.Fragment>
   )
 }
 
